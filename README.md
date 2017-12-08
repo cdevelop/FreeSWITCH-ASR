@@ -7,7 +7,5 @@
 
 想了开发进度，和本项目的技术交流欢迎加QQ群：340129771
 
-
-<a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=5c882a6bd5633fe00d03f1d505510414a87df42524de885d1e3ab2bd754a1f90"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="FreeSWITCH Asterisk PJSIP SIP" title="FreeSWITCH Asterisk PJSIP SIP"></a>
-
+![](qq_qun.png)
 
