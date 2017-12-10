@@ -1,0 +1,14 @@
+#注意：
+#1. 以#开头的行为注释，处理时会直接跳过该行。
+#2. 配置中每行只能出现一条配置且以key:value的形式出现，切忌中间、行头、行尾不要出现空格，除非key, value字段中本身含有空格
+#3. linux环境中，请注意此config文件换行符是否是linux的格式
+Url:wss://nls-trans.dataapi.aliyun.com:443/realtime
+AppKey:nls-service-realtime-8k
+SampleRate:8000
+UserId:
+#VocabId:
+#KeyWordListId:
+ResponseMode:streaming
+Format:pcm
+#TimeOut:
+#OutputFormat:GBK
