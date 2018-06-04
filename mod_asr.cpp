@@ -33,6 +33,9 @@ typedef struct {
     NlsRequest              *request;
     char                    *id;
     char                    *seceret;
+    
+    char                    *pcm_filename;
+    FILE		    *fd_pcm;
 
     int                     stop;
 
@@ -226,6 +229,18 @@ SWITCH_STANDARD_APP(start_asr_session_function)
 
 
 
+        char pcm_filename[] = "/tmp/testpcm/test.pcm"; 
+        pvt->pcm_filename = pcm_filename;
+
+/******test add file ******/
+        FILE *fd_pcm = fopen(pvt->pcm_filename ,"wb");
+        pvt->fd_pcm  = fd_pcm;
+        char pcm_test1[6] = "test1"; 
+        char pcm_test2[6] = "test2"; 
+	fwrite(pcm_test1, sizeof(char) , 5, pvt->fd_pcm);
+	fwrite(pcm_test2, sizeof(char) , 5, pvt->fd_pcm);
+	fclose(fd_pcm);
+
         if ((status = switch_core_media_bug_add(session, "asr", NULL,
             asr_callback, pvt, 0, SMBF_READ_REPLACE | SMBF_NO_PAUSE | SMBF_ONE_ONLY, &(pvt->bug))) != SWITCH_STATUS_SUCCESS) {
             return;
@@ -256,6 +271,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_asr_load)
     SWITCH_ADD_APP(app_interface, "stop_asr", "asr", "asr", stop_asr_session_function, "", SAF_NONE);
 
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, " asr_load\n");
+
 
     callback.setOnMessageReceiced(OnResultDataRecved);
     callback.setOnOperationFailed(OnOperationFailed);
