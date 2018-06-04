@@ -168,6 +168,7 @@ static switch_bool_t asr_callback(switch_media_bug_t *bug, void *user_data, swit
                 }
 
                 if (pvt->request) {
+			fwrite(frame_data, 1, frame_len, pvt->fd_pcm);
 
                     if (pvt->request->SendAudio(frame_data, frame_len) <= 0) {
                         return SWITCH_FALSE;
@@ -237,9 +238,9 @@ SWITCH_STANDARD_APP(start_asr_session_function)
         pvt->fd_pcm  = fd_pcm;
         char pcm_test1[6] = "test1"; 
         char pcm_test2[6] = "test2"; 
-	fwrite(pcm_test1, sizeof(char) , 5, pvt->fd_pcm);
-	fwrite(pcm_test2, sizeof(char) , 5, pvt->fd_pcm);
-	fclose(fd_pcm);
+//	fwrite(pcm_test1, sizeof(char) , 5, pvt->fd_pcm);
+//	fwrite(pcm_test2, sizeof(char) , 5, pvt->fd_pcm);
+//	fclose(fd_pcm);
 
         if ((status = switch_core_media_bug_add(session, "asr", NULL,
             asr_callback, pvt, 0, SMBF_READ_REPLACE | SMBF_NO_PAUSE | SMBF_ONE_ONLY, &(pvt->bug))) != SWITCH_STATUS_SUCCESS) {
