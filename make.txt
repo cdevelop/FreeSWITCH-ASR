@@ -1,0 +1,2 @@
+ g++ -shared -fPIC -o mod_asr.so mod_asr.cpp -pthread -I ../nlsSpeech-release/include -I /usr/local/freeswitch/include/freeswitch  -L ../nlsSpeech-release/lib/linux -L /usr/local/freeswitch/lib -ldl -lopus -lrealTimeUnity -lfreeswitch
+
