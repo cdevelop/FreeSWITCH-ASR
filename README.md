@@ -5,9 +5,9 @@
 第一个版本实现 [阿里云ASR](https://help.aliyun.com/document_detail/30416.html?spm=5176.doc30416.3.2.PuOAsM "阿里云ASR")和FreeSWITCH的直接对接，把识别结果通过ESL输出。
 
 
-想了开发进度，和本项目的技术交流欢迎加QQ群：340129771
+FreeSWITCH技术交流群：21596142 欢迎加群交流
 
-![](qq_qun.png)
+
 
 
 
