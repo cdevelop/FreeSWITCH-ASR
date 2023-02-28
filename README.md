@@ -1,17 +1,76 @@
 # FreeSWITCH ASR 模块
 
-**最近很多人都对FreeSWITCH和ASR对接比较感谢兴趣，我之前已经做了一个商业模块（商业模块请点击这里[http://www.dingdingtong.cn/smartivr/](http://www.dingdingtong.cn/smartivr/ "http://www.dingdingtong.cn/smartivr/")），考虑到大部分人，只是研究一下，并不准确购买商业模块，特意做一个开源项目给大家提供一个参考。**
+**最近很多人都对FreeSWITCH和ASR对接比较感谢兴趣，我之前已经做了一个商业模块（商业模块请点击这里[http://www.ddrj.com/callcenter/asr.html](http://www.ddrj.com/callcenter/asr.html "http://www.ddrj.com/callcenter/asr.html")），考虑到大部分人，只是研究一下，并不准确购买商业模块，特意做一个开源项目给大家提供一个参考。**
 
-第一个版本实现 [阿里云ASR](https://help.aliyun.com/document_detail/30416.html?spm=5176.doc30416.3.2.PuOAsM "阿里云ASR")和FreeSWITCH的直接对接，把识别结果通过ESL输出。
+mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别）本程序包的授权文件是10并发1个月的体验授权，仅用于体验和测试使用，商业使用请联系 顶顶通购买正式授权 联系方式 微信 cdevelop 网站 www.ddrj.com
+
+<img src="wx.jpg" alt="wx" style="zoom:33%;" />
+
+## 顶顶通VAD介绍
+
+语音活动检测(Voice Activity Detection,VAD)，就是检测是否有声音，常规的算法是通过声音音量和频谱特诊来判断是否有声音的，但是无法区分是噪音还是人声，在电话机器人中**噪音打断**和**噪音识别错误的关键词**始终是一个痛点，机器学习算法可以通过大量噪音和人声数据训练出判别人声还是噪音的神经网络模型，VAD算法结合深度神经网络就可以彻底解决这个痛点了。 顶顶通的最新VAD算法已经集成了人声噪音判别引擎。
+
+### 噪音识别的用处
+
+- 防止错误的意向判断
+
+  噪音识别成关键词（是，恩，哦），导致把无意向客户判断成有意向客户，通过噪音识别模块，过滤掉噪音，可以大大提高机器人的意向判断准确度。
+
+- 防止噪音打断机器人说话
+  大部分机器人只要开了打断功能，有一点噪音就给错误打断了，根本没法在生产环境开打断功能，有了噪音识别模块，就可以避免噪音打断了。
+
+- 机器人反应更灵敏
+
+  噪音环境VAD无法判断用户说话结束，会导致用户说话完成了，机器人还一直傻等，有了噪音识别模块，可以让机器人反应更加灵敏。
+
+- 节约ASR费用
+
+  在电话机器人业务中，大量的无效声音(各种噪音)调用ASR，浪费ASR调用费用，有了噪音人声判别功能，就可以噪音不再调用ASR接口，节约大量ASR费用。
+
+### 噪音人声识别算法原理
+
+基于20G的噪音声音文件和100G的正常人声的声音文件，使用tdnn(时延神经网络)和 lstm(长短期记忆网络)训练出噪音人声音判别模型。
+
+### 噪音人声识别的准确率
+
+准确率取决训练数据的准确性，目前的模型大于1秒声音准确率大于99.9%， 300毫秒以内短时人声和质量很差的人声，有少量识别成噪音的错误率，因为噪音库包含了大量的背景人声。
 
 
-FreeSWITCH技术交流群：21596142 欢迎加群交流
+
+## **2023-2-28 第二版本代码提交**
+
+- 安装 libsad 
+
+  - 目录 copy到 /var目录，最后的路径是/var/libsad/license.jon /var/libsad/model/...
+  - mod_asr.so copy到 fs的mod目录
+  - fs_cli 执行 load mod_asr 加载模块。
+
+- 申请ASR  本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后可以联系ASR服务商微信 aohu6789 获取免费次数
+
+  在fs安装目录/etc/vars.xml  配置asr key
+
+    <X-PRE-PROCESS cmd="set" data="appKey=asr后台的appkey"></X-PRE-PROCESS>
+    <X-PRE-PROCESS cmd="set" data="appSecret=asr后台的appSecret"></X-PRE-PROCESS>
+
+- 测试
+
+  执行动作 play_and_asr  参数 playfilename waittime maxspeaktime allowbreak recordfilename
+
+  - playfilename   放音文件
+  - waittime  等待说话时间，放音完成开始计算
+  - maxspeaktime  最大说话时间
+  - allowbreak  是否允许打断，检测到说话就停止放音
+  - recordfilename  本次说话录音文件
+
+   例子appliacton="play_and_asr " data="welcome.wav  5000 10000 true speak.wav"
 
 
 
 
 
-**2017-12-10 第一版本代码提交**
+mod_asr_aliyun.cpp 第一个版本实现 [阿里云ASR](https://help.aliyun.com/document_detail/30416.html?spm=5176.doc30416.3.2.PuOAsM "阿里云ASR")和FreeSWITCH的直接对接，把识别结果通过ESL输出。
+
+## **2017-12-10 第一版本代码提交**
 
 - 安装
 	- 如果你觉得自己编译太麻烦，可以直接下载我编译好的，放在bin 目录里面。路径请根据自己情况修改。**注意只支持x64系统**
