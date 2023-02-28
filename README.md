@@ -4,7 +4,7 @@
 
 mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别）本程序包的授权文件是10并发1个月的体验授权，仅用于体验和测试使用，商业使用请联系 顶顶通购买正式授权 联系方式 微信 cdevelop 网站 www.ddrj.com
 
-![](wx.jpg)
+![](wx.png)
 
 ## 顶顶通VAD介绍
 
@@ -52,8 +52,12 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
 
   在fs安装目录/etc/vars.xml  配置asr key
 
+  ```
     <X-PRE-PROCESS cmd="set" data="appKey=asr后台的appkey"></X-PRE-PROCESS>
     <X-PRE-PROCESS cmd="set" data="appSecret=asr后台的appSecret"></X-PRE-PROCESS>
+    
+  ```
+
 
 - 测试
 
@@ -66,9 +70,10 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
   - recordfilename  本次说话录音文件
 
    例子
+   ```
     <action application="play_and_asr" data="welcome.wav  5000 10000 true /tmp/speak.wav"/>
     <action application="log" data="open=${asr_result}"/>
-
+   ```
 
 
 - 编译
