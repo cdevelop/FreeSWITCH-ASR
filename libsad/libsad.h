@@ -1,15 +1,15 @@
 /*!
-¶¥¶¥Í¨VAD£¬¼¯³ÉSAD(ÔëÒôÈËÉùÊ¶±ğ)³ÌĞò 1.0
-±¾³ÌĞò°üµÄÊÚÈ¨ÎÄ¼şÊÇ10²¢·¢1¸öÔÂµÄÌåÑéÊÚÈ¨£¬½öÓÃÓÚÌåÑéºÍ²âÊÔÊ¹ÓÃ£¬ÉÌÒµÊ¹ÓÃÇëÁªÏµ ¶¥¶¥Í¨¹ºÂòÕıÊ½ÊÚÈ¨
-ÁªÏµ·½Ê½ Î¢ĞÅ cdevelop ÍøÕ¾ www.ddrj.com
+é¡¶é¡¶é€šVADï¼Œé›†æˆSAD(å™ªéŸ³äººå£°è¯†åˆ«)ç¨‹åº 1.0
+æœ¬ç¨‹åºåŒ…çš„æˆæƒæ–‡ä»¶æ˜¯10å¹¶å‘1ä¸ªæœˆçš„ä½“éªŒæˆæƒï¼Œä»…ç”¨äºä½“éªŒå’Œæµ‹è¯•ä½¿ç”¨ï¼Œå•†ä¸šä½¿ç”¨è¯·è”ç³» é¡¶é¡¶é€šè´­ä¹°æ­£å¼æˆæƒ
+è”ç³»æ–¹å¼ å¾®ä¿¡ cdevelop ç½‘ç«™ www.ddrj.com
 
 
-±¾½Ó¿ÚÌá¹©ÁËVADºÍSAD£¨ÈËÉùÊ¶±ğ£© 2¸ö½Ó¿Ú
-SAD½Ó¿ÚÖ»Ê¹ÓÃÉñ¾­ÍøÂçËã·¨½øĞĞ´¦Àí¡£
-VAD½Ó¿ÚÈç¹ûnoise_filter_levelÉèÖÃ´óÓÚ0.8¾Í»áÆôÓÃSAD(Éñ¾­ÍøÂçËã·¨)À´ÓÅ»¯VADĞ§¹û£¬Èç¹ûµÍÓÚ0.8¾ÍÊÇÆÕÍ¨µÄVAD¡£
+æœ¬æ¥å£æä¾›äº†VADå’ŒSADï¼ˆäººå£°è¯†åˆ«ï¼‰ 2ä¸ªæ¥å£
+SADæ¥å£åªä½¿ç”¨ç¥ç»ç½‘ç»œç®—æ³•è¿›è¡Œå¤„ç†ã€‚
+VADæ¥å£å¦‚æœnoise_filter_levelè®¾ç½®å¤§äº0.8å°±ä¼šå¯ç”¨SAD(ç¥ç»ç½‘ç»œç®—æ³•)æ¥ä¼˜åŒ–VADæ•ˆæœï¼Œå¦‚æœä½äº0.8å°±æ˜¯æ™®é€šçš„VADã€‚
 
-SAD½Ó¿ÚĞèÒªCPU±È½Ï¶à
-VAD½Ó¿Ú(noise_filter_levelÉèÖÃ´óÓÚ0.8)£¬Ö»ÓĞVAD¼ì²âµ½ÉùÒô£¬²ÅÆôÓÃÉñ¾­ÍøÂçËã·¨·ÖÎöÊÇÈËÉí»¹ÊÇÔëÒô£¬¿ÉÒÔ½ÚÔ¼´óÁ¿µÄCPU£¬Ò²¿ÉÒÔ´ïµ½ºÍµ¥¶ÀÊ¹ÓÃSAD½Ó¿ÚÀàËÆµÄĞ§¹û¡£
+SADæ¥å£éœ€è¦CPUæ¯”è¾ƒå¤š
+VADæ¥å£(noise_filter_levelè®¾ç½®å¤§äº0.8)ï¼Œåªæœ‰VADæ£€æµ‹åˆ°å£°éŸ³ï¼Œæ‰å¯ç”¨ç¥ç»ç½‘ç»œç®—æ³•åˆ†ææ˜¯äººèº«è¿˜æ˜¯å™ªéŸ³ï¼Œå¯ä»¥èŠ‚çº¦å¤§é‡çš„CPUï¼Œä¹Ÿå¯ä»¥è¾¾åˆ°å’Œå•ç‹¬ä½¿ç”¨SADæ¥å£ç±»ä¼¼çš„æ•ˆæœã€‚
 
 
 */
@@ -49,15 +49,15 @@ extern "C" {
     SAD_API int dd_sad_frame_size(DD_SAD* sad, int freq);
     SAD_API int dd_sad_frames_right_context(DD_SAD* sad, int freq);
 
-    //0£º·ÇÈËÉù 1£ºÈËÉù
+    //0ï¼šéäººå£° 1ï¼šäººå£°
     SAD_API int dd_sad_process(DD_SAD* sad, const short* samples, size_t len, int freq, bool last);
-    //·µ»ØÒÑ¾­Ìá½»´¦ÀíÑù±¾ÊıÁ¿
+    //è¿”å›å·²ç»æäº¤å¤„ç†æ ·æœ¬æ•°é‡
     SAD_API size_t dd_sad_count(DD_SAD* sad);
-    //·µ»Øµ±Ç°×´Ì¬³ÖĞøÑù±¾ÊıÁ¿
+    //è¿”å›å½“å‰çŠ¶æ€æŒç»­æ ·æœ¬æ•°é‡
     SAD_API size_t dd_sad_duration(DD_SAD* sad);
-    //·µ»ØÎ´´¦ÀíµÄÑù±¾
+    //è¿”å›æœªå¤„ç†çš„æ ·æœ¬
     SAD_API size_t dd_sad_pending(DD_SAD* sad);
-    //°ÑÎ´´¦ÀíµÄÊı¾İ´¦ÀíÍê³É²¢ÇÒÊÍ·Åsad
+    //æŠŠæœªå¤„ç†çš„æ•°æ®å¤„ç†å®Œæˆå¹¶ä¸”é‡Šæ”¾sad
     SAD_API int dd_sad_finish(DD_SAD* sad, size_t* sad_count, size_t* voice_begin, size_t* voice_end);
 
 
@@ -72,33 +72,33 @@ extern "C" {
 
     typedef struct DD_VAD_T DD_VAD;
 
-    //frame_time ±ØĞë 10£¬20£¬30ÖĞµÄÒ»¸ö
-    //min_activity_time ÉùÒôÊ±¼ä´óÓÚËü£¬½øÈë»î¶¯×´Ì¬
-    //min_silence_time ¾²ÒôÊ±¼ä´óÓÚËü£¬½øÈë¾²Òô×´Ì¬
-    //noise_filter_level 0-1 £¬0.8ÒÔÉÏ»áÆôÓÃÔëÒôÈËÉùÊ¶±ğËã·¨ÓÅ»¯VADĞ§¹û¡£
+    //frame_time å¿…é¡» 10ï¼Œ20ï¼Œ30ä¸­çš„ä¸€ä¸ª
+    //min_activity_time å£°éŸ³æ—¶é—´å¤§äºå®ƒï¼Œè¿›å…¥æ´»åŠ¨çŠ¶æ€
+    //min_silence_time é™éŸ³æ—¶é—´å¤§äºå®ƒï¼Œè¿›å…¥é™éŸ³çŠ¶æ€
+    //noise_filter_level 0-1 ï¼Œ0.8ä»¥ä¸Šä¼šå¯ç”¨å™ªéŸ³äººå£°è¯†åˆ«ç®—æ³•ä¼˜åŒ–VADæ•ˆæœã€‚
     SAD_API DD_VAD* dd_vad_create(int freq_hz, int frame_time, size_t cache_ms, DD_VAD_MODE mode, int min_activity_time, int min_silence_time, int voice_threshold, double noise_filter_level);
     SAD_API void dd_vad_destory(DD_VAD* vad);
     SAD_API void dd_vad_reset(DD_VAD* vad, DD_VAD_MODE mode, int min_activity_time, int min_silence_time, int threshold, double filter);
     SAD_API void dd_vad_reset_default(DD_VAD* vad);
 
-    //0:¾²Òô  1:ÉùÒô -1:´íÎó
+    //0:é™éŸ³  1:å£°éŸ³ -1:é”™è¯¯
     SAD_API int dd_vad_process(DD_VAD* vad, const short* samples, size_t len);
-    //°ÑÎ´¾öµÄÊı¾İ´¦ÀíÍê³É
+    //æŠŠæœªå†³çš„æ•°æ®å¤„ç†å®Œæˆ
     SAD_API int dd_vad_last(DD_VAD* vad);
 
 
-    //·µ»Øvad×´Ì¬ 0 ¾²Òô 1 Î´¾ö[SAD·ÖÎöÖĞ] 2ÉùÒô
+    //è¿”å›vadçŠ¶æ€ 0 é™éŸ³ 1 æœªå†³[SADåˆ†æä¸­] 2å£°éŸ³
     SAD_API int dd_vad_status(DD_VAD* vad);
-    //·µ»ØÌá½»´¦Àí²ÉÑù×ÜÊı
+    //è¿”å›æäº¤å¤„ç†é‡‡æ ·æ€»æ•°
     SAD_API size_t dd_vad_count(DD_VAD* vad);
-    //·µ»Øµ±Ç°×´Ì¬µÄ²ÉÑùÊı
+    //è¿”å›å½“å‰çŠ¶æ€çš„é‡‡æ ·æ•°
     SAD_API size_t dd_vad_duration(DD_VAD* vad);
-    //·µ»ØÉÏÒ»¸ö×´Ì¬µÄ²ÉÑùÊı
+    //è¿”å›ä¸Šä¸€ä¸ªçŠ¶æ€çš„é‡‡æ ·æ•°
     SAD_API size_t dd_vad_prev_duration(DD_VAD* vad);
-    //·µ»Øµ±Ç°×´Ì¬µÄÎ´È·¶¨²ÉÑùÊı
+    //è¿”å›å½“å‰çŠ¶æ€çš„æœªç¡®å®šé‡‡æ ·æ•°
     SAD_API size_t dd_vad_pend_duration(DD_VAD* vad);
-    //boottimeÉùÒôÇ°Ãæ¶àÉÙºÁÃëµÄÉùÒô·µ»Ø
-    //first_len,second_len ÎªÑù±¾¸öÊı£¬²»ÊÇ×Ö½ÚÊı¡£
+    //boottimeå£°éŸ³å‰é¢å¤šå°‘æ¯«ç§’çš„å£°éŸ³è¿”å›
+    //first_len,second_len ä¸ºæ ·æœ¬ä¸ªæ•°ï¼Œä¸æ˜¯å­—èŠ‚æ•°ã€‚
     SAD_API size_t dd_vad_cachedata(DD_VAD* vad, size_t boottime, short** first_sample, size_t* first_len, short** second_sample, size_t* second_len);
    
 

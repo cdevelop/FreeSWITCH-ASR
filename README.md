@@ -4,7 +4,7 @@
 
 mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别）本程序包的授权文件是10并发1个月的体验授权，仅用于体验和测试使用，商业使用请联系 顶顶通购买正式授权 联系方式 微信 cdevelop 网站 www.ddrj.com
 
-<img src="wx.jpg" alt="wx" style="zoom:33%;" />
+![](wx.jpg)
 
 ## 顶顶通VAD介绍
 
@@ -38,10 +38,13 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
 
 
 ## **2023-2-28 第二版本代码提交**
-
+请在FreeSWITCH 1.8以上版本测试，低于1.8版本需要修改代码：switch_buffer.c没有switch_buffer_get_head_pointer这个函数。
 - 安装 libsad 
 
-  - 目录 copy到 /var目录，最后的路径是/var/libsad/license.jon /var/libsad/model/...
+  - 目录 copy到 /var目录，最后的路径是
+    - 授权文件 /var/libsad/license.jon 
+    - 模型目录 /var/libsad/model/ 
+    - lib文件 /var/libsad/libsad.so
   - mod_asr.so copy到 fs的mod目录
   - fs_cli 执行 load mod_asr 加载模块。
 
@@ -55,15 +58,22 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
 - 测试
 
   执行动作 play_and_asr  参数 playfilename waittime maxspeaktime allowbreak recordfilename
-
+  语音识别结果存入通道变量asr_result，如果没有检测到声音设置为silence
   - playfilename   放音文件
   - waittime  等待说话时间，放音完成开始计算
   - maxspeaktime  最大说话时间
   - allowbreak  是否允许打断，检测到说话就停止放音
   - recordfilename  本次说话录音文件
 
-   例子appliacton="play_and_asr " data="welcome.wav  5000 10000 true speak.wav"
+   例子
+    <action application="play_and_asr" data="welcome.wav  5000 10000 true /tmp/speak.wav"/>
+    <action application="log" data="open=${asr_result}"/>
 
+
+
+- 编译
+如果修改了代码编译方法是 
+g++ -shared -fPIC -o mod_asr.so mod_asr.cpp -I /usr/local/freeswitch/include/freeswitch -L /usr/local/freeswitch/lib -lfreeswitch -L /var/libsad/ -lsad -Wl,-rpath=/var/libsad
 
 
 

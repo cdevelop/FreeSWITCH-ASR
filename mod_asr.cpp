@@ -2,9 +2,9 @@
     Author: cdevelop@qq.com(wwww.ddrj.com)
 
 
-    ¶¥¶¥Í¨VAD£¨Ö§³ÖÔëÒôÈËÉùÊ¶±ð£©¼¯³ÉFreeSWITCHÑÝÊ¾³ÌÐò
-    ±¾³ÌÐò°üµÄÊÚÈ¨ÎÄ¼þÊÇ10²¢·¢1¸öÔÂµÄÌåÑéÊÚÈ¨£¬½öÓÃÓÚÌåÑéºÍ²âÊÔÊ¹ÓÃ£¬ÉÌÒµÊ¹ÓÃÇëÁªÏµ ¶¥¶¥Í¨¹ºÂòÕýÊ½ÊÚÈ¨
-    ÁªÏµ·½Ê½ Î¢ÐÅ cdevelop ÍøÕ¾ www.ddrj.com
+    é¡¶é¡¶é€šVADï¼ˆæ”¯æŒå™ªéŸ³äººå£°è¯†åˆ«ï¼‰é›†æˆFreeSWITCHæ¼”ç¤ºç¨‹åº
+    æœ¬ç¨‹åºåŒ…çš„æŽˆæƒæ–‡ä»¶æ˜¯10å¹¶å‘1ä¸ªæœˆçš„ä½“éªŒæŽˆæƒï¼Œä»…ç”¨äºŽä½“éªŒå’Œæµ‹è¯•ä½¿ç”¨ï¼Œå•†ä¸šä½¿ç”¨è¯·è”ç³» é¡¶é¡¶é€šè´­ä¹°æ­£å¼æŽˆæƒ
+    è”ç³»æ–¹å¼ å¾®ä¿¡ cdevelop ç½‘ç«™ www.ddrj.com
 
 */
 
@@ -21,7 +21,7 @@
 
 
 
- //±¾Àý×ÓÊ¹ÓÃ¶à·½asr½Ó¿Ú£¬×¢²áµØÖ· http://ai.hiszy.com/#/user/register?code=RK9RD7W ×¢²áºó¿ÉÒÔÁªÏµASR·þÎñÉÌÎ¢ÐÅ aohu6789 »ñÈ¡Ãâ·Ñ´ÎÊý
+ //æœ¬ä¾‹å­ä½¿ç”¨å¤šæ–¹asræŽ¥å£ï¼Œæ³¨å†Œåœ°å€ http://ai.hiszy.com/#/user/register?code=RK9RD7W æ³¨å†ŒåŽå¯ä»¥è”ç³»ASRæœåŠ¡å•†å¾®ä¿¡ aohu6789 èŽ·å–å…è´¹æ¬¡æ•°
  //
 
  static char* g_token = NULL;
@@ -31,8 +31,8 @@
 
  static size_t curlrecv(char* buffer, size_t size, size_t nitems, void* outstream)
  {
-     switch_buffer* read = (switch_buffer*)outstream;
-     switch_buffer_write(read, buffer, size * nitems);
+     switch_buffer* response = (switch_buffer*)outstream;
+     switch_buffer_write(response, buffer, size * nitems);
      return size * nitems;
  }
 
@@ -51,14 +51,12 @@
          free(appSecret);
          switch_buffer* response;
          switch_buffer_create_dynamic(&response, 1024, 1024, 1024 * 4);
-
          switch_CURL* curl_handle = switch_curl_easy_init();
          switch_curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0);
          switch_curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);
          switch_curl_easy_setopt(curl_handle, CURLOPT_HTTPPOST, 1);
          switch_curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT_MS, 2000);
          switch_curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT_MS, 5000);
-
          switch_curl_easy_setopt(curl_handle, CURLOPT_URL, "http://openapi.duofangai.com/server/api/auth/get-token");
          switch_curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, response);
          switch_curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curlrecv);
@@ -71,17 +69,12 @@
          //snprintf(tmp, sizeof(tmp), "Content-Length: %zd", datalength);
          //headerlist = switch_curl_slist_append(headerlist, tmp);
          switch_curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headerlist);
-
-
-         int httpRes = 0;
+         long httpRes = 0;
          switch_curl_easy_perform(curl_handle);
          switch_curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &httpRes);
          switch_curl_slist_free_all(headerlist);
          switch_curl_easy_cleanup(curl_handle);
-
-
          switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "get token:%.*s.\n", (int)switch_buffer_inuse(response), (char*)switch_buffer_get_head_pointer(response));
-
          if (httpRes == 200) {
              cJSON* json = cJSON_Parse((const char*)switch_buffer_get_head_pointer(response));
              if (json) {
@@ -94,6 +87,8 @@
                  cJSON_Delete(json);
              }
          }
+
+
 
          switch_buffer_destroy(&response);
      }
@@ -143,7 +138,7 @@
      switch_curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headerlist);
 
 
-     int httpRes = 0;
+     long httpRes = 0;
      switch_curl_easy_perform(curl_handle);
      switch_curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &httpRes);
      switch_curl_slist_free_all(headerlist);
@@ -197,6 +192,7 @@ SWITCH_STANDARD_APP(play_and_asr_session_function)
     switch_bool_t allowbreak = SWITCH_FALSE;
     switch_time_t speakstarttime = 0;
     switch_time_t waitstarttime = 0;
+    int laststate = 0;
 
     memset(&read_impl, 0, sizeof(read_impl));
     switch_core_session_get_read_impl(session, &read_impl);
@@ -265,7 +261,6 @@ SWITCH_STANDARD_APP(play_and_asr_session_function)
         goto end;
     }
 
-    int laststate = 0;
 
     while (switch_channel_ready(channel)) {
 
@@ -316,7 +311,7 @@ SWITCH_STANDARD_APP(play_and_asr_session_function)
                     size_t first_len = 0;
                     short* second_sample;
                     size_t second_len = 0;
-                    dd_vad_cachedata(vad, 100, &first_sample, &first_len, &second_sample, &second_len);
+                    dd_vad_cachedata(vad, 200, &first_sample, &first_len, &second_sample, &second_len);
                     switch_buffer_create_dynamic(&speakbuffer, 10 * read_impl.actual_samples_per_second * 2, 10 * read_impl.actual_samples_per_second * 2, maxspeaktime / 1000 * read_impl.actual_samples_per_second * 2);
                     switch_buffer_write(speakbuffer, first_sample, first_len * 2);
                     switch_buffer_write(speakbuffer, second_sample, second_len * 2);
@@ -326,6 +321,12 @@ SWITCH_STANDARD_APP(play_and_asr_session_function)
                     break;
                 }
             }
+
+            if (speakbuffer) {
+                switch_buffer_write(speakbuffer, read_frame->data, read_frame->datalen);
+            }
+
+
         }
 
         if (laststate == 0)
@@ -412,7 +413,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_asr_load)
 
         getasrtoken();
 
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, " mod_asr load %s\n", license);
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, " mod_asr load license:\n%s\n", license);
     }
     else {
         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "libsad_init failed\n");
