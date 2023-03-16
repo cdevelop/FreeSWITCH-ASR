@@ -351,7 +351,6 @@ end:
         switch_core_file_close(&play_fh);
     }
   
-
     if (speakbuffer) {
 
         char asr_result[1024] = "\0";
@@ -393,6 +392,214 @@ end:
 
 
 
+typedef struct {
+
+    switch_core_session_t*  session;
+    switch_media_bug_t*     bug;
+    DD_VAD_T*               vad;
+
+    int                     laststate;
+    switch_buffer*          speakbuffer;
+    switch_time_t           speakstarttime;
+} switch_da_t;
+
+
+typedef struct {
+    switch_memory_pool_t* pool;
+    const char* uuid;
+    switch_buffer* speakbuffer;
+} asr_job_t;
+
+void* SWITCH_THREAD_FUNC asr_thread(switch_thread_t*, void*arg)
+{
+    asr_job_t* job = (asr_job_t*)arg;
+    char asr_result[1024] = "\0";
+    execasr((const unsigned char*)switch_buffer_get_head_pointer(job->speakbuffer), switch_buffer_inuse(job->speakbuffer), asr_result, sizeof(asr_result) - 1);
+    switch_log_printf(SWITCH_CHANNEL_UUID_LOG(job->uuid), SWITCH_LOG_INFO, "asr_result:%s\n", asr_result);
+    switch_buffer_destroy(&job->speakbuffer);
+
+    switch_event_t* event = NULL;
+    if (switch_event_create(&event, SWITCH_EVENT_CUSTOM) == SWITCH_STATUS_SUCCESS) {
+
+        event->subclass_name = strdup("asr");
+        switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Event-Subclass", event->subclass_name);
+        switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "ASR-Response", asr_result);
+        switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "ASR-Uuid", job->uuid);
+        switch_event_fire(&event);
+    }
+    return 0;
+}
+
+static switch_bool_t asr_callback(switch_media_bug_t* bug, void* user_data, switch_abc_type_t type)
+{
+    switch_da_t* pvt = (switch_da_t*)user_data;
+    switch_channel_t* channel = switch_core_session_get_channel(pvt->session);
+
+    switch (type) {
+    case SWITCH_ABC_TYPE_INIT:
+    {
+
+        pvt->vad = dd_vad_create(8000, 20, 1000, DD_VAD_MODE_AGGRESSIVE, 100, 800, 100, 0.8);
+
+        if (pvt->vad) {
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "ASR Start Succeed channel:%s\n", switch_channel_get_name(channel));
+            pvt->speakbuffer = NULL;
+            pvt->laststate = 0;
+            pvt->speakstarttime = 0;
+        }
+
+
+    }
+    break;
+    case SWITCH_ABC_TYPE_CLOSE:
+    {
+        if (pvt->vad) {
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "ASR Stop Succeed channel:%s\n", switch_channel_get_name(channel));
+            dd_vad_destory(pvt->vad);
+            if (pvt->speakbuffer) {
+                switch_buffer_destroy(&pvt->speakbuffer);
+            }
+        }
+
+    }
+    break;
+
+    case SWITCH_ABC_TYPE_READ_REPLACE:
+    {
+        bool doasr = false;
+        switch_frame_t* frame;
+        if ((frame = switch_core_media_bug_get_read_replace_frame(bug))) {
+            switch_core_media_bug_set_read_replace_frame(bug, frame);
+            if (frame->channels != 1)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "nonsupport channels:%d!\n", frame->channels);
+                return SWITCH_FALSE;
+            }
+
+            if (frame->datalen > 2) {
+
+                int state = dd_vad_process(pvt->vad, (const short*)frame->data, frame->datalen / 2);
+                if (state != pvt->laststate) {
+                    pvt->laststate = state;
+
+                    if (state) {
+                        short* first_sample;
+                        size_t first_len = 0;
+                        short* second_sample;
+                        size_t second_len = 0;
+
+                        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(pvt->session), SWITCH_LOG_INFO, "start speak.\n");
+                        switch_buffer_create_dynamic(&pvt->speakbuffer, 2 * 16000, 10 * 16000, 60 * 16000);
+
+                        dd_vad_cachedata(pvt->vad, 200, &first_sample, &first_len, &second_sample, &second_len);
+                        switch_buffer_write(pvt->speakbuffer, first_sample, first_len * 2);
+                        switch_buffer_write(pvt->speakbuffer, second_sample, second_len * 2);
+
+
+                        pvt->speakstarttime = switch_micro_time_now() - (first_len + second_len)/8;
+
+                    }
+                    else {
+                        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(pvt->session), SWITCH_LOG_INFO, "stop speak.\n");
+                        doasr = true;
+                        pvt->speakstarttime = 0;
+                    }
+                }
+
+                if (pvt->speakstarttime) {
+                    switch_buffer_write(pvt->speakbuffer, frame->data, frame->datalen);
+                }
+
+
+            }
+
+            if (pvt->speakstarttime && switch_micro_time_now() - pvt->speakstarttime > 60000000) {
+                switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(pvt->session), SWITCH_LOG_INFO, "speak time too long.\n");
+                doasr = true;
+                pvt->speakstarttime = 0;
+                pvt->laststate = 0;
+
+            }
+
+            if (doasr) {
+
+
+                switch_thread_data_t* td;
+                switch_memory_pool_t* pool;
+                asr_job_t* job;
+
+                switch_core_new_memory_pool(&pool);
+                td = (switch_thread_data_t*)switch_core_alloc(pool, sizeof(*td));
+                job = (asr_job_t*)switch_core_alloc(pool, sizeof(*job));
+                td->func = asr_thread;
+                job->pool = pool;
+                job->uuid = switch_core_strdup(pool, switch_core_session_get_uuid(pvt->session));
+                job->speakbuffer = pvt->speakbuffer;
+                td->obj = job;
+                td->pool = pool;
+                switch_thread_pool_launch_thread(&td);
+
+                pvt->speakbuffer = NULL;
+
+            }
+        
+        }
+
+    }
+    break;
+    default: break;
+    }
+
+    return SWITCH_TRUE;
+}
+
+
+SWITCH_STANDARD_APP(stop_asr_session_function)
+{
+    switch_da_t* pvt;
+    switch_channel_t* channel = switch_core_session_get_channel(session);
+
+    if ((pvt = (switch_da_t*)switch_channel_get_private(channel, "asr"))) {
+
+        switch_channel_set_private(channel, "asr", NULL);
+        switch_core_media_bug_remove(session, &pvt->bug);
+        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "%s Stop ASR\n", switch_channel_get_name(channel));
+
+    }
+}
+
+
+SWITCH_STANDARD_APP(start_asr_session_function)
+{
+    switch_channel_t* channel = switch_core_session_get_channel(session);
+
+    switch_status_t status;
+    switch_da_t* pvt;
+    switch_codec_implementation_t read_impl;
+    memset(&read_impl, 0, sizeof(switch_codec_implementation_t));
+
+
+
+    switch_core_session_get_read_impl(session, &read_impl);
+
+    if (!(pvt = (switch_da_t*)switch_core_session_alloc(session, sizeof(switch_da_t)))) {
+        return;
+    }
+
+    pvt->session = session;
+
+
+    if ((status = switch_core_media_bug_add(session, "asr", NULL,
+        asr_callback, pvt, 0, SMBF_READ_REPLACE | SMBF_NO_PAUSE | SMBF_ONE_ONLY, &(pvt->bug))) != SWITCH_STATUS_SUCCESS) {
+        return;
+    }
+
+    switch_channel_set_private(channel, "asr", pvt);
+    switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "%s Start ASR\n", switch_channel_get_name(channel));
+
+
+}
+
 
 
 
@@ -404,6 +611,11 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_asr_load)
     if (libsad_init()) {
         *module_interface = switch_loadable_module_create_module_interface(pool, modname);
         SWITCH_ADD_APP(app_interface, "play_and_asr", "asr", "asr", play_and_asr_session_function, "playfilename waittime maxspeaktime allowbreak recordfilename", SAF_MEDIA_TAP);
+
+        SWITCH_ADD_APP(app_interface, "start_asr", "asr", "asr", start_asr_session_function, "", SAF_MEDIA_TAP);
+        SWITCH_ADD_APP(app_interface, "stop_asr", "asr", "asr", stop_asr_session_function, "", SAF_NONE);
+
+
 
         status = SWITCH_STATUS_SUCCESS;
         char license[2048] = "\0";
