@@ -48,7 +48,7 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
   - mod_asr.so copy到 fs的mod目录
   - fs_cli 执行 load mod_asr 加载模块。
 
-- 申请ASR  本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后可以联系ASR服务商微信 aohu6789 获取免费次数
+- 申请ASR  本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后每天可以免费测试1000次。需要更多次数可以 联系微信 aohu6789 购买，请先说明是顶顶通开源接口，充值有优惠。
 
   在fs安装目录/etc/vars.xml  配置asr key
 
@@ -79,6 +79,19 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
 - 编译
 如果修改了代码编译方法是 
 g++ -shared -fPIC -o mod_asr.so mod_asr.cpp -I /usr/local/freeswitch/include/freeswitch -L /usr/local/freeswitch/lib -lfreeswitch -L /var/libsad/ -lsad -Wl,-rpath=/var/libsad
+
+
+
+
+- 兼容第一版本的测试方法，asr key 在 vars.xml 里面设置。
+
+			<extension name="asr">
+				<condition field="destination_number" expression="^(888)$">
+					<action application="answer"/>
+					<action application="start_asr"/>
+					<action application="park"/>
+				</condition>
+			</extension> 
 
 
 
