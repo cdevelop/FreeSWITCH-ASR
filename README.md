@@ -41,14 +41,14 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
 请在FreeSWITCH 1.8以上版本测试，低于1.8版本需要修改代码：switch_buffer.c没有switch_buffer_get_head_pointer这个函数。
 - 安装 libsad 
 
-  - 目录 copy到 /var目录，最后的路径是
+  - libsad目录 copy到 /var目录，最后的路径是
     - 授权文件 /var/libsad/license.jon 
     - 模型目录 /var/libsad/model/ 
     - lib文件 /var/libsad/libsad.so
   - mod_asr.so copy到 fs的mod目录
   - fs_cli 执行 load mod_asr 加载模块。
 
-- 申请ASR  本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后每天可以免费测试1000次。需要更多次数可以 联系微信 aohu6789 购买，请先说明是顶顶通开源接口，充值有优惠。
+- 申请ASR  本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后每天可以免费测试1000次。
 
   在fs安装目录/etc/vars.xml  配置asr key
 
@@ -59,7 +59,7 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
   ```
 
 
-- 测试
+- 测试 play_and_asr ，放音的同时进行ASR识别，和 play_and_detect_speech 一样。
 
   执行动作 play_and_asr  参数 playfilename waittime maxspeaktime allowbreak recordfilename
   语音识别结果存入通道变量asr_result，如果没有检测到声音设置为silence
@@ -76,6 +76,19 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
    ```
 
 
+
+- 测试start_asr 和 detect_speech 一样，后台进行ASR识别。 兼容第一版本，asr key 在 vars.xml 里面设置。
+   ```
+	<extension name="asr">
+		<condition field="destination_number" expression="^(888)$">
+		<action application="answer"/>
+		<action application="start_asr"/>
+		<action application="park"/>
+		</condition>
+	</extension> 
+   ```
+
+
 - 编译
 如果修改了代码编译方法是 
 g++ -shared -fPIC -o mod_asr.so mod_asr.cpp -I /usr/local/freeswitch/include/freeswitch -L /usr/local/freeswitch/lib -lfreeswitch -L /var/libsad/ -lsad -Wl,-rpath=/var/libsad
@@ -83,15 +96,6 @@ g++ -shared -fPIC -o mod_asr.so mod_asr.cpp -I /usr/local/freeswitch/include/fre
 
 
 
-- 兼容第一版本的测试方法，asr key 在 vars.xml 里面设置。
-
-			<extension name="asr">
-				<condition field="destination_number" expression="^(888)$">
-					<action application="answer"/>
-					<action application="start_asr"/>
-					<action application="park"/>
-				</condition>
-			</extension> 
 
 
 
