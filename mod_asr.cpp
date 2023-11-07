@@ -21,13 +21,7 @@
 
 
 
- //本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后可以联系ASR服务商微信 aohu6789 获取免费次数
- //
-
- static char* g_token = NULL;
- time_t g_expir = 0;
- static switch_mutex_t *g_lock = NULL;
-
+ 
 
  static size_t curlrecv(char* buffer, size_t size, size_t nitems, void* outstream)
  {
@@ -36,73 +30,29 @@
      return size * nitems;
  }
 
- static const char* getasrtoken()
- {
-     char* ret = NULL;
-     switch_mutex_lock(g_lock);
 
-     if (g_expir - switch_epoch_time_now(0) < 500) {
-
-         char* appKey = switch_core_get_variable_dup("appKey");
-         char* appSecret = switch_core_get_variable_dup("appSecret");
-         char buffer[1024] = "\0";
-         int len = snprintf(buffer, sizeof(buffer), "{\"appKey\":\"%s\",\"appSecret\":\"%s\"}", appKey, appSecret);
-         free(appKey);
-         free(appSecret);
-         switch_buffer* response;
-         switch_buffer_create_dynamic(&response, 1024, 1024, 1024 * 4);
-         switch_CURL* curl_handle = switch_curl_easy_init();
-         switch_curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_HTTPPOST, 1);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT_MS, 2000);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT_MS, 5000);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_URL, "http://openapi.duofangai.com/server/api/auth/get-token");
-         switch_curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, response);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curlrecv);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, (void*)&buffer);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, len);
-         char tmp[512];
-         switch_curl_slist_t* headerlist = NULL;
-         snprintf(tmp, sizeof(tmp), "Content-Type: %s", "application/json");
-         headerlist = switch_curl_slist_append(headerlist, tmp);
-         //snprintf(tmp, sizeof(tmp), "Content-Length: %zd", datalength);
-         //headerlist = switch_curl_slist_append(headerlist, tmp);
-         switch_curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headerlist);
-         long httpRes = 0;
-         switch_curl_easy_perform(curl_handle);
-         switch_curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &httpRes);
-         switch_curl_slist_free_all(headerlist);
-         switch_curl_easy_cleanup(curl_handle);
-         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "get token:%.*s.\n", (int)switch_buffer_inuse(response), (char*)switch_buffer_get_head_pointer(response));
-         if (httpRes == 200) {
-             cJSON* json = cJSON_Parse((const char*)switch_buffer_get_head_pointer(response));
-             if (json) {
-                 cJSON* code = cJSON_GetObjectItem(json, "code");
-                 if (code && code->valueint == 200) {
-                     cJSON* data = cJSON_GetObjectItem(json, "data");
-                     switch_strdup(g_token, data->valuestring);
-                     g_expir = switch_epoch_time_now(0) * 24 * 3600;
-                 }
-                 cJSON_Delete(json);
-             }
-         }
-
-
-
-         switch_buffer_destroy(&response);
-     }
-
-     ret = g_token;
-
-     switch_mutex_unlock(g_lock);
-
-     return ret ? ret : "";
- }
-
+ //本例子使用顶顶通asr接口，商用可联系顶顶通购买ASR私有化部署
 
  static const char* execasr(const unsigned char*data,size_t len,char *buffer,size_t size)
  {
+
+     const char* key = switch_core_get_variable("appKey");
+     if (!key) {
+         key = "test";
+     }
+
+     const char* secret = switch_core_get_variable("appSecret");
+     if (!secret) {
+         secret = "test";
+     }
+
+     const char* engine = "shortsentence";
+
+     const char* asraddr = switch_core_get_variable("asrAddr");
+     if (!asraddr) {
+         asraddr = "http://asr.ddrj.com:9990/asr";
+     }
+
 
      switch_buffer* response;
      switch_buffer_create_dynamic(&response, 1024, 1024, 1024 * 4);
@@ -114,54 +64,55 @@
      switch_curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT_MS, 2000);
      switch_curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT_MS, 5000);
 
-     switch_curl_easy_setopt(curl_handle, CURLOPT_URL, "http://openapi.duofangai.com/open/asr/sentence/v1/recognition");
+     switch_curl_easy_setopt(curl_handle, CURLOPT_URL, asraddr);
      switch_curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, response);
      switch_curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curlrecv);
      switch_curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, (void*)data);
      switch_curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, len);
 
 
+
      char tmp[1024];
+     switch_time_t timestamp = switch_epoch_time_now(0);
+     snprintf(tmp, sizeof(tmp), "%s%lld", key, timestamp);
+
+     char checksum[SWITCH_MD5_DIGEST_STRING_SIZE];
+     switch_md5_string(checksum, tmp, strlen(tmp));
+
+
      switch_curl_slist_t* headerlist = NULL;
      snprintf(tmp, sizeof(tmp), "Content-Length: %zd", len);
      headerlist = switch_curl_slist_append(headerlist, tmp);
      snprintf(tmp, sizeof(tmp), "Content-Type: %s", "application/octet-stream");
      headerlist = switch_curl_slist_append(headerlist, tmp);
-     snprintf(tmp, sizeof(tmp), "aitoken: %s", getasrtoken());
+     snprintf(tmp, sizeof(tmp), "id: %s", key);
      headerlist = switch_curl_slist_append(headerlist, tmp);
-     snprintf(tmp, sizeof(tmp), "format: pcm");
+     snprintf(tmp, sizeof(tmp), "signature: %s", checksum);
      headerlist = switch_curl_slist_append(headerlist, tmp);
-     snprintf(tmp, sizeof(tmp), "pct: true");
+     snprintf(tmp, sizeof(tmp), "timestamp: %lld", timestamp);
      headerlist = switch_curl_slist_append(headerlist, tmp);
-     snprintf(tmp, sizeof(tmp), "itn: true");
+     snprintf(tmp, sizeof(tmp), "engine: %s", engine);
      headerlist = switch_curl_slist_append(headerlist, tmp);
      switch_curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headerlist);
 
 
+
      long httpRes = 0;
+     switch_time_t now = switch_micro_time_now();
      switch_curl_easy_perform(curl_handle);
+     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "%s %s %s voicetime:%d elapsed:%lld asr result:%.*s.\n", asraddr,key,secret, len/2/8, (switch_micro_time_now()-now)/1000, (int)switch_buffer_inuse(response), (char*)switch_buffer_get_head_pointer(response));
      switch_curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &httpRes);
      switch_curl_slist_free_all(headerlist);
      switch_curl_easy_cleanup(curl_handle);
 
 
-     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "asr result:%.*s.\n", (int)switch_buffer_inuse(response), (char*)switch_buffer_get_head_pointer(response));
 
      if (httpRes == 200) {
          cJSON* json = cJSON_Parse((const char*)switch_buffer_get_head_pointer(response));
          if (json) {
-             cJSON* code = cJSON_GetObjectItem(json, "code");
-             if (code && code->valueint != 200000) {
-                 cJSON* message = cJSON_GetObjectItem(json, "message");
-                 if (message) {
-                     snprintf(buffer, size, "%s", message->valuestring);
-                 }
-             }
-             else {
-                 cJSON* data = cJSON_GetObjectItem(json, "data");
-                 if (data) {
-                     snprintf(buffer, size, "%s", data->valuestring);
-                 }
+             cJSON* data = cJSON_GetObjectItem(json, "desc");
+             if (data) {
+                 snprintf(buffer, size, "%s", data->valuestring);
              }
              cJSON_Delete(json);
          }
@@ -354,7 +305,9 @@ end:
     if (speakbuffer) {
 
         char asr_result[1024] = "\0";
+        switch_time_t now = switch_micro_time_now();
         execasr((const unsigned char*)switch_buffer_get_head_pointer(speakbuffer), switch_buffer_inuse(speakbuffer), asr_result, sizeof(asr_result) - 1);
+        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "elapsed:%lld, asr_result:%s\n", (switch_micro_time_now()-now)/1000,asr_result);
 
         switch_channel_set_variable(channel, "asr_result", asr_result);
 
@@ -413,9 +366,10 @@ typedef struct {
 void* SWITCH_THREAD_FUNC asr_thread(switch_thread_t*, void*arg)
 {
     asr_job_t* job = (asr_job_t*)arg;
+    switch_time_t now = switch_micro_time_now();
     char asr_result[1024] = "\0";
     execasr((const unsigned char*)switch_buffer_get_head_pointer(job->speakbuffer), switch_buffer_inuse(job->speakbuffer), asr_result, sizeof(asr_result) - 1);
-    switch_log_printf(SWITCH_CHANNEL_UUID_LOG(job->uuid), SWITCH_LOG_INFO, "asr_result:%s\n", asr_result);
+    switch_log_printf(SWITCH_CHANNEL_UUID_LOG(job->uuid), SWITCH_LOG_INFO, "elapsed:%lld, asr_result:%s\n", (switch_micro_time_now()-now)/1000,asr_result);
     switch_buffer_destroy(&job->speakbuffer);
 
     switch_event_t* event = NULL;
@@ -615,17 +569,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_asr_load)
         SWITCH_ADD_APP(app_interface, "start_asr", "asr", "asr", start_asr_session_function, "", SAF_MEDIA_TAP);
         SWITCH_ADD_APP(app_interface, "stop_asr", "asr", "asr", stop_asr_session_function, "", SAF_NONE);
 
-
-
         status = SWITCH_STATUS_SUCCESS;
-        char license[2048] = "\0";
-        libsad_license(license, sizeof(license));
-
-        switch_mutex_init(&g_lock, SWITCH_MUTEX_NESTED, pool);
-
-        getasrtoken();
-
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, " mod_asr load license:\n%s\n", license);
     }
     else {
         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "libsad_init failed\n");
@@ -642,7 +586,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_asr_load)
 
     libsad_clean();
 
-    switch_mutex_destroy(g_lock);
 
     return SWITCH_STATUS_SUCCESS;
 }

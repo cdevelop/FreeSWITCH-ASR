@@ -37,7 +37,7 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
 
 
 
-## **2023-2-28 第二版本代码提交**
+## **2023-11-08 第三版本代码提交**
 请在FreeSWITCH 1.8以上版本测试，低于1.8版本需要修改代码：switch_buffer.c没有switch_buffer_get_head_pointer这个函数。
 - 安装 libsad 
 
@@ -48,14 +48,13 @@ mod_asr.cpp 第二个版本，使用了顶顶通VAD（支持噪音人声识别�
   - mod_asr.so copy到 fs的mod目录
   - fs_cli 执行 load mod_asr 加载模块。
 
-- 申请ASR  本例子使用多方asr接口，注册地址 http://ai.hiszy.com/#/user/register?code=RK9RD7W 注册后每天可以免费测试1000次。
-
-  在fs安装目录/etc/vars.xml  配置asr key
+- 本例子使用顶顶通ASR接口，商用可联系顶顶通购买ASR私有化部署。
+  在fs安装目录/etc/vars.xml  配置asr key,测试可跳过这一步骤
 
   ```
-    <X-PRE-PROCESS cmd="set" data="appKey=asr后台的appkey"></X-PRE-PROCESS>
-    <X-PRE-PROCESS cmd="set" data="appSecret=asr后台的appSecret"></X-PRE-PROCESS>
-    
+    <X-PRE-PROCESS cmd="set" data="appKey=test"></X-PRE-PROCESS>
+    <X-PRE-PROCESS cmd="set" data="appSecret=test"></X-PRE-PROCESS>
+    <X-PRE-PROCESS cmd="set" data="asrAddr="http://asr.ddrj.com:9990/asr"></X-PRE-PROCESS>
   ```
 
 
