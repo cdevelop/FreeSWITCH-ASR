@@ -562,7 +562,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_asr_load)
     switch_status_t status = SWITCH_STATUS_FALSE;
     switch_application_interface_t *app_interface;
 
-    if (libsad_init()) {
+    if (libsad_init("/var/libsad/license.json", "/var/libsad/model")) {
         *module_interface = switch_loadable_module_create_module_interface(pool, modname);
         SWITCH_ADD_APP(app_interface, "play_and_asr", "asr", "asr", play_and_asr_session_function, "playfilename waittime maxspeaktime allowbreak recordfilename", SAF_MEDIA_TAP);
 
